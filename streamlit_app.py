@@ -1,8 +1,8 @@
 import streamlit as st
 
 # Configure page
-st.set_page_config(page_title="Category Assistant Tool Kit")
-st.title("🎈Category Assistant Tool Kit")
+st.set_page_config(page_title="RSEA Product Team Tool Kit")
+st.title("🎈RSEA Product Team Tool Kit")
 st.write("Tool used for RSEA Product team")
 
 # Instructions

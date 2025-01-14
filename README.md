@@ -1,4 +1,4 @@
-# 🎈 Blank app template
+# Category Assistant Tool Kit
 
 A simple Streamlit app template for you to modify!
 
