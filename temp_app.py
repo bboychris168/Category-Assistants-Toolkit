@@ -11,119 +11,49 @@ st.set_page_config(
     layout="wide"
 )
 
-# Define the CSS for both light and dark modes
+# Define the CSS
 st.markdown("""
 <style>
-    /* Base styles */
+    .main { padding: 2rem; }
     .section {
         background: var(--section-bg-color);
         border: 1px solid var(--section-border-color);
         border-radius: 10px;
         padding: 2rem;
         margin: 2rem 0;
-        box-shadow: var(--section-shadow);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     }
-    
     .card {
         background: var(--card-bg-color);
         border: 1px solid var(--card-border-color);
         border-radius: 8px;
         padding: 1.5rem;
         margin: 1rem 0;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-        box-shadow: var(--card-shadow);
+        transition: transform 0.2s ease;
     }
-    
-    .card:hover {
-        transform: translateY(-2px);
-        box-shadow: var(--card-shadow-hover);
-    }
-    
+    .card:hover { transform: translateY(-2px); }
     .section-title {
         color: var(--primary-color);
-        font-size: 1.8rem;
+        font-size: 1.5rem;
         margin-bottom: 1.5rem;
         padding-bottom: 0.5rem;
         border-bottom: 2px solid var(--primary-color);
     }
-    
-    h3 {
-        color: var(--text-color);
-        font-size: 1.4rem;
-        margin-bottom: 1rem;
-    }
-    
-    p {
-        color: var(--text-color);
-    }
-    
-    /* Light theme variables */
     [data-theme="light"] {
         --primary-color: #2196F3;
         --section-bg-color: #ffffff;
         --section-border-color: #e0e0e0;
-        --section-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         --card-bg-color: #f8f9fa;
         --card-border-color: #e0e0e0;
-        --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        --card-shadow-hover: 0 4px 8px rgba(0, 0, 0, 0.15);
         --text-color: #2C3E50;
     }
-    
-    /* Dark theme variables */
     [data-theme="dark"] {
         --primary-color: #90CAF9;
         --section-bg-color: #1E1E1E;
         --section-border-color: #404040;
-        --section-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
         --card-bg-color: #262730;
         --card-border-color: #404040;
-        --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-        --card-shadow-hover: 0 4px 8px rgba(0, 0, 0, 0.4);
         --text-color: #E0E0E0;
-    }
-    
-    /* Dataframe styling */
-    .dataframe {
-        border: none !important;
-        background: var(--card-bg-color) !important;
-        color: var(--text-color) !important;
-    }
-    
-    .dataframe th {
-        background-color: var(--section-bg-color) !important;
-        color: var(--primary-color) !important;
-        font-weight: 600 !important;
-    }
-    
-    .dataframe td {
-        color: var(--text-color) !important;
-    }
-    
-    /* Button styling */
-    .stButton > button {
-        background-color: var(--primary-color) !important;
-        color: white !important;
-        border: none !important;
-        padding: 0.5rem 1rem !important;
-        transition: all 0.3s ease !important;
-    }
-    
-    .stButton > button:hover {
-        transform: translateY(-2px) !important;
-        box-shadow: var(--card-shadow-hover) !important;
-    }
-    
-    /* Success message styling */
-    .success {
-        color: #4CAF50 !important;
-        font-weight: 500;
-    }
-    
-    /* Metrics styling */
-    [data-testid="stMetricValue"] {
-        color: var(--primary-color) !important;
-        font-size: 1.5rem !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -212,9 +142,6 @@ if supplier_file and system_file:
         st.markdown("""
         <div class="section">
             <h2 class="section-title">⚙️ Configure Columns</h2>
-            <div class="card">
-                <p>Select the corresponding columns from your files for matching.</p>
-            </div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -250,9 +177,6 @@ if supplier_file and system_file:
             st.markdown("""
             <div class="section">
                 <h2 class="section-title">📊 Matching Results</h2>
-                <div class="card">
-                    <p>Processing your files and finding the best matches...</p>
-                </div>
             </div>
             """, unsafe_allow_html=True)
 
@@ -348,12 +272,6 @@ if supplier_file and system_file:
             low_matches = len(results_df[results_df['Match Score'].astype(str).str.rstrip('%').astype(float) < 70])
 
             # Display metrics
-            st.markdown("""
-            <div class="card">
-                <h3>Match Quality Summary</h3>
-            </div>
-            """, unsafe_allow_html=True)
-            
             col1, col2, col3 = st.columns(3)
             with col1:
                 st.metric("High Matches (90%+)", high_matches)
@@ -363,19 +281,12 @@ if supplier_file and system_file:
                 st.metric("Low Matches (<70%)", low_matches)
 
             # Display results
-            st.markdown("""
-            <div class="card">
-                <h3>Detailed Results</h3>
-            </div>
-            """, unsafe_allow_html=True)
-            
             st.dataframe(results_df, height=400, use_container_width=True)
 
             # Export functionality
             st.markdown("""
             <div class="card">
                 <h3>💾 Export Results</h3>
-                <p>Download the complete results for further analysis.</p>
             </div>
             """, unsafe_allow_html=True)
             
