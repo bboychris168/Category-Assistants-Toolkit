@@ -7,7 +7,7 @@ import io
 
 # Set page config
 st.set_page_config(
-    page_title="Item Code Matcher",
+    page_title="Price Impact item code catcher",
     page_icon="🔍",
     layout="wide"
 )
