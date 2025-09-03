@@ -212,12 +212,12 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Main title with modern styling
-st.title("📊 Smart Item Code Matcher")
+st.title("📊 Price Impact item code catcher")
 
 # Introduction
 st.markdown("""
 <div class="card">
-    <h3>Welcome to Smart Item Code Matcher! 👋</h3>
+    <h3>Welcome to Price Impact item code catcher! 👋</h3>
     <p>This tool helps you match your system's item codes with supplier codes using intelligent fuzzy matching.
     It handles different formats, special characters, and variations to find the best possible matches.</p>
 </div>
