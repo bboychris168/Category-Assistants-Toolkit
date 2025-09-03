@@ -4,7 +4,7 @@ from rapidfuzz import fuzz, process
 import re
 import io
 
-st.set_page_config(page_title="Item Code Matcher", page_icon="🔍", layout="wide")
+st.set_page_config(page_title="Price Impact Item Code Matcher", page_icon="🔍", layout="wide")
 
 st.markdown("""
 <style>
@@ -33,7 +33,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Header
-st.markdown("""<div class="section"><h1>📊 Item Code Matcher</h1>
+st.markdown("""<div class="section"><h1>📊 Price Impact Item Code Matcher</h1>
 <div class="card"><p>Match your system's item codes with supplier codes using intelligent fuzzy matching.</p></div></div>""", unsafe_allow_html=True)
 
 # Quick Guide
