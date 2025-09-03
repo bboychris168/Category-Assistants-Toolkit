@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
-from fuzzywuzzy import fuzz
-from fuzzywuzzy import process
+from rapidfuzz import fuzz, process
 import re
 import io
 
@@ -261,12 +260,13 @@ if supplier_file and system_file:
                     for var1 in str1_variations:
                         for var2 in str2_variations:
                             # Try different matching algorithms
-                            ratio_score = fuzz.ratio(var1, var2)
-                            token_score = fuzz.token_sort_ratio(var1, var2)
-                            partial_score = fuzz.partial_ratio(var1, var2)
+                            ratio_score = fuzz.ratio(var1, var2, score_cutoff=0)
+                            token_score = fuzz.token_sort_ratio(var1, var2, score_cutoff=0)
+                            partial_score = fuzz.partial_ratio(var1, var2, score_cutoff=0)
+                            wratio_score = fuzz.WRatio(var1, var2, score_cutoff=0)  # Weighted ratio for better matching
                             
                             # Take the highest score from any method
-                            best_score = max(best_score, ratio_score, token_score, partial_score)
+                            best_score = max(best_score, ratio_score, token_score, partial_score, wratio_score)
                     return best_score
 
                 # Find best match for each system item code
