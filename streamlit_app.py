@@ -11,45 +11,93 @@ st.set_page_config(
     layout="wide"
 )
 
-# Custom CSS
+# Custom CSS with dark mode support
 st.markdown("""
 <style>
     /* Main container */
     .main > div {
         padding: 2rem;
         border-radius: 10px;
+    }
+    
+    [data-theme="light"] .main > div {
         background: #ffffff;
     }
     
+    [data-theme="dark"] .main > div {
+        background: #262730;
+    }
+    
     /* Headers */
-    h1 {
+    [data-theme="light"] h1 {
         color: #1E88E5;
+    }
+    
+    [data-theme="dark"] h1 {
+        color: #90CAF9;
+    }
+    
+    h1 {
         font-size: 2.5rem !important;
         font-weight: 700 !important;
         margin-bottom: 2rem !important;
         padding-bottom: 1rem;
-        border-bottom: 3px solid #1E88E5;
+        border-bottom: 3px solid;
+        border-color: inherit;
+    }
+    
+    [data-theme="light"] h2 {
+        color: #2196F3;
+    }
+    
+    [data-theme="dark"] h2 {
+        color: #64B5F6;
     }
     
     h2 {
-        color: #2196F3;
         font-size: 1.8rem !important;
         font-weight: 600 !important;
         margin-top: 2rem !important;
     }
     
-    h3 {
+    [data-theme="light"] h3 {
         color: #42A5F5;
+    }
+    
+    [data-theme="dark"] h3 {
+        color: #42A5F5;
+    }
+    
+    h3 {
         font-size: 1.4rem !important;
         font-weight: 500 !important;
     }
     
+    /* Text colors */
+    [data-theme="light"] .card {
+        color: #2C3E50;
+        background: #FAFAFA;
+    }
+    
+    [data-theme="dark"] .card {
+        color: #E0E0E0;
+        background: #1E1E1E;
+    }
+    
     /* File uploader */
     .uploadedFile {
-        border: 2px dashed #90CAF9;
+        border: 2px dashed;
         border-radius: 5px;
         padding: 1rem;
         margin: 1rem 0;
+    }
+    
+    [data-theme="light"] .uploadedFile {
+        border-color: #90CAF9;
+    }
+    
+    [data-theme="dark"] .uploadedFile {
+        border-color: #64B5F6;
     }
     
     /* Buttons */
@@ -63,23 +111,46 @@ st.markdown("""
     
     .stButton > button:hover {
         transform: translateY(-2px);
+    }
+    
+    [data-theme="light"] .stButton > button:hover {
         box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     }
     
+    [data-theme="dark"] .stButton > button:hover {
+        box-shadow: 0 4px 8px rgba(255,255,255,0.1);
+    }
+    
     /* Progress bar */
-    .stProgress > div > div {
+    [data-theme="light"] .stProgress > div > div {
         background-color: #2196F3;
+    }
+    
+    [data-theme="dark"] .stProgress > div > div {
+        background-color: #64B5F6;
     }
     
     /* Dataframe */
     .dataframe {
         border: none !important;
+    }
+    
+    [data-theme="light"] .dataframe {
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
     
-    .dataframe th {
+    [data-theme="dark"] .dataframe {
+        box-shadow: 0 2px 4px rgba(255,255,255,0.1);
+    }
+    
+    [data-theme="light"] .dataframe th {
         background-color: #E3F2FD !important;
         color: #1E88E5 !important;
+    }
+    
+    [data-theme="dark"] .dataframe th {
+        background-color: #1E1E1E !important;
+        color: #90CAF9 !important;
     }
     
     .dataframe td {
@@ -98,15 +169,44 @@ st.markdown("""
     .card {
         padding: 1.5rem;
         border-radius: 8px;
-        border: 1px solid #E0E0E0;
         margin: 1rem 0;
-        background: #FAFAFA;
+    }
+    
+    [data-theme="light"] .card {
+        border: 1px solid #E0E0E0;
+    }
+    
+    [data-theme="dark"] .card {
+        border: 1px solid #404040;
     }
     
     /* Dividers */
-    hr {
+    [data-theme="light"] hr {
         margin: 2rem 0 !important;
         border-color: #E3F2FD !important;
+    }
+    
+    [data-theme="dark"] hr {
+        margin: 2rem 0 !important;
+        border-color: #404040 !important;
+    }
+    
+    /* Text and links */
+    [data-theme="light"] a {
+        color: #2196F3;
+    }
+    
+    [data-theme="dark"] a {
+        color: #90CAF9;
+    }
+    
+    /* Success messages */
+    [data-theme="light"] .success {
+        color: #4CAF50;
+    }
+    
+    [data-theme="dark"] .success {
+        color: #81C784;
     }
 </style>
 """, unsafe_allow_html=True)
