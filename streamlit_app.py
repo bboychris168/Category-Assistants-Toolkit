@@ -74,8 +74,17 @@ def get_best_match_score(str1_variations, str2_variations):
 # Process files when both are uploaded
 if supplier_file and system_file:
     try:
-        supplier_df = pd.read_excel(supplier_file)
-        system_df = pd.read_csv(system_file) if system_file.name.endswith('.csv') else pd.read_excel(system_file)
+        supplier_df = pd.read_excel(supplier_file, encoding_override='utf-8')
+        system_df = pd.read_csv(system_file, encoding='utf-8') if system_file.name.endswith('.csv') else pd.read_excel(system_file, encoding_override='utf-8')
+
+        # Clean up any potential encoding issues in the data
+        for col in supplier_df.columns:
+            if supplier_df[col].dtype == 'object':
+                supplier_df[col] = supplier_df[col].apply(lambda x: str(x).encode('ascii', 'ignore').decode('ascii') if pd.notnull(x) else x)
+        
+        for col in system_df.columns:
+            if system_df[col].dtype == 'object':
+                system_df[col] = system_df[col].apply(lambda x: str(x).encode('ascii', 'ignore').decode('ascii') if pd.notnull(x) else x)
 
         st.markdown("""<div class="section"><h2>⚙️ Configure</h2></div>""", unsafe_allow_html=True)
         col1, col2 = st.columns(2)
@@ -140,8 +149,17 @@ if supplier_file and system_file:
 
             st.dataframe(results_df, height=400, use_container_width=True)
             
-            csv = results_df.to_csv(index=False)
-            st.download_button("📥 Download CSV", csv, "matching_results.csv", "text/csv")
+            # Clean the results DataFrame for any remaining encoding issues
+            for col in results_df.columns:
+                if results_df[col].dtype == 'object':
+                    results_df[col] = results_df[col].apply(lambda x: str(x).encode('ascii', 'ignore').decode('ascii') if pd.notnull(x) else x)
+            
+            # Export to CSV with UTF-8 encoding
+            csv_buffer = io.StringIO()
+            results_df.to_csv(csv_buffer, index=False, encoding='utf-8')
+            csv_str = csv_buffer.getvalue()
+            
+            st.download_button("📥 Download CSV", csv_str, "matching_results.csv", "text/csv", encoding='utf-8')
 
     except Exception as e:
         st.error(f"Error: {str(e)}")
