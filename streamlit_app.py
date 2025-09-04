@@ -58,18 +58,47 @@ with col2:
         st.success(f"✅ {system_file.name}")
 
 def normalize_code(code):
-    code = str(code).lower()
-    code_clean = re.sub(r'[^\w\s]', '', code)
-    return [code, code_clean, code_clean.replace(' ', ''), re.sub(r'\s+', '', code)]
+    # Convert to string and lowercase
+    code = str(code).lower().strip()
+    # Remove any special characters and spaces
+    code_clean = re.sub(r'[^\w]', '', code)
+    return code_clean
 
-def get_best_match_score(str1_variations, str2_variations):
-    best_score = 0
-    for var1 in str1_variations:
-        for var2 in str2_variations:
-            best_score = max(best_score, fuzz.ratio(var1, var2),
-                           fuzz.token_sort_ratio(var1, var2),
-                           fuzz.partial_ratio(var1, var2))
-    return best_score
+def get_best_match_score(str1, str2):
+    # Get cleaned versions of the codes
+    code1 = normalize_code(str1)
+    code2 = normalize_code(str2)
+    
+    # If exact match after normalization, return 100
+    if code1 == code2:
+        return 100.0
+    
+    # Get lengths of both codes
+    len1 = len(code1)
+    len2 = len(code2)
+    
+    # Calculate length difference percentage
+    length_diff_pct = abs(len1 - len2) / max(len1, len2)
+    
+    # If length difference is more than 30%, return 0
+    if length_diff_pct > 0.3:
+        return 0.0
+    
+    # Calculate base similarity score
+    ratio_score = fuzz.ratio(code1, code2)
+    
+    # More aggressive length penalty
+    length_penalty = (1 - length_diff_pct) * 0.5
+    
+    # If the base score is too low, return 0
+    if ratio_score < 60:
+        return 0.0
+    
+    # Calculate final score with length penalty
+    final_score = ratio_score * (0.5 + length_penalty)
+    
+    # Cap non-exact matches at 95%
+    return min(final_score, 95.0)
 
 # Process files when both are uploaded
 if supplier_file and system_file:
@@ -111,10 +140,9 @@ if supplier_file and system_file:
                 progress_bar.progress(progress)
                 status_text.text(f"Processing {idx + 1}/{total_items}")
 
-                system_variations = normalize_code(system_code)
                 for _, supplier_row in supplier_df.iterrows():
                     supplier_code = str(supplier_row[supplier_item_col])
-                    score = get_best_match_score(system_variations, normalize_code(supplier_code))
+                    score = get_best_match_score(system_code, supplier_code)
                     if score > best_score:
                         best_score = score
                         best_match = supplier_code
