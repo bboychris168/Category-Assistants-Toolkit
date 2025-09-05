@@ -60,44 +60,47 @@ with col2:
 def normalize_code(code):
     # Convert to string and lowercase
     code = str(code).lower().strip()
-    # Remove any special characters and spaces
-    code_clean = re.sub(r'[^\w]', '', code)
-    return code_clean
+    
+    # First try to match the base code (before any slash)
+    base_code = code.split('/')[0]
+    base_code_clean = re.sub(r'[^\w]', '', base_code)
+    
+    # Store the suffix if it exists
+    suffix = code.split('/')[1] if '/' in code else ''
+    suffix_clean = re.sub(r'[^\w]', '', suffix) if suffix else ''
+    
+    # Return both cleaned versions for comparison
+    return base_code_clean, suffix_clean
 
 def get_best_match_score(str1, str2):
     # Get cleaned versions of the codes
-    code1 = normalize_code(str1)
-    code2 = normalize_code(str2)
+    code1_base, code1_suffix = normalize_code(str1)
+    code2_base, code2_suffix = normalize_code(str2)
     
     # If exact match after normalization, return 100
-    if code1 == code2:
+    if code1_base + code1_suffix == code2_base + code2_suffix:
         return 100.0
     
-    # Get lengths of both codes
-    len1 = len(code1)
-    len2 = len(code2)
-    
-    # Calculate length difference percentage
-    length_diff_pct = abs(len1 - len2) / max(len1, len2)
-    
-    # If length difference is more than 30%, return 0
-    if length_diff_pct > 0.3:
-        return 0.0
+    # If base codes match exactly
+    if code1_base == code2_base:
+        # If one has no suffix and other does, give high score but not 100
+        if not code1_suffix or not code2_suffix:
+            return 90.0
+        
+        # If both have suffixes, compare them
+        suffix_score = fuzz.ratio(code1_suffix, code2_suffix)
+        return 85.0 + (suffix_score * 0.15)  # Max 100, Min 85
     
     # Calculate base similarity score
-    ratio_score = fuzz.ratio(code1, code2)
+    base_score = fuzz.ratio(code1_base, code2_base)
     
-    # More aggressive length penalty
-    length_penalty = (1 - length_diff_pct) * 0.5
-    
-    # If the base score is too low, return 0
-    if ratio_score < 60:
+    # If base score is too low, return 0
+    if base_score < 60:
         return 0.0
     
-    # Calculate final score with length penalty
-    final_score = ratio_score * (0.5 + length_penalty)
+    # Calculate final score
+    final_score = base_score * 0.8  # Give more weight to base code match
     
-    # Cap non-exact matches at 95%
     return min(final_score, 95.0)
 
 # Process files when both are uploaded
