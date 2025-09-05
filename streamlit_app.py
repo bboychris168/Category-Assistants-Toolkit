@@ -187,7 +187,7 @@ if supplier_file and system_file:
             results_df.to_csv(csv_buffer, index=False, encoding='utf-8')
             csv_str = csv_buffer.getvalue()
             
-            st.download_button("📥 Download CSV", csv_str, "matching_results.csv", "text/csv", encoding='utf-8')
+            st.download_button("📥 Download CSV", csv_str, "matching_results.csv", "text/csv")
 
     except Exception as e:
         st.error(f"Error: {str(e)}")
