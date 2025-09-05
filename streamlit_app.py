@@ -103,8 +103,8 @@ def get_best_match_score(str1, str2):
 # Process files when both are uploaded
 if supplier_file and system_file:
     try:
-        supplier_df = pd.read_excel(supplier_file, encoding_override='utf-8')
-        system_df = pd.read_csv(system_file, encoding='utf-8') if system_file.name.endswith('.csv') else pd.read_excel(system_file, encoding_override='utf-8')
+        supplier_df = pd.read_excel(supplier_file)
+        system_df = pd.read_csv(system_file, encoding='utf-8') if system_file.name.endswith('.csv') else pd.read_excel(system_file)
 
         # Clean up any potential encoding issues in the data
         for col in supplier_df.columns:
