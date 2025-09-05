@@ -106,7 +106,7 @@ if supplier_file and system_file:
         supplier_df = pd.read_excel(supplier_file)
         system_df = pd.read_csv(system_file, encoding='utf-8') if system_file.name.endswith('.csv') else pd.read_excel(system_file)
 
-        # Clean up any potential encoding issues in the data
+        # Clean up any potential encoding issues
         for col in supplier_df.columns:
             if supplier_df[col].dtype == 'object':
                 supplier_df[col] = supplier_df[col].apply(lambda x: str(x).encode('ascii', 'ignore').decode('ascii') if pd.notnull(x) else x)
