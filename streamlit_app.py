@@ -132,30 +132,69 @@ if supplier_file and system_file:
             progress_bar = st.progress(0)
             status_text = st.empty()
             results = []
+
+            # New UI controls for threshold / top-N
+            threshold = st.sidebar.slider("Match threshold (%)", min_value=0, max_value=100, value=70, step=1)
+            top_n = st.sidebar.number_input("Top N matches to show", min_value=1, max_value=5, value=1, step=1)
+
             total_items = len(system_df)
 
+            # Precompute normalized supplier keys to speed matching
+            supplier_rows = []
+            supplier_full_keys = []
+            for _, supplier_row in supplier_df.iterrows():
+                supplier_code = str(supplier_row[supplier_item_col])
+                base, suffix = normalize_code(supplier_code)
+                full_key = base + suffix  # compact normalized token
+                supplier_full_keys.append(full_key)
+                supplier_rows.append({
+                    'orig_code': supplier_code,
+                    'full_key': full_key,
+                    'base': base,
+                    'suffix': suffix,
+                    'price': supplier_row[supplier_price_col]
+                })
+
+            # Iterate system rows and use rapidfuzz.process to find matches
             for idx, system_row in system_df.iterrows():
                 system_code = str(system_row[system_item_col])
-                best_match = best_price = None
-                best_score = 0
-                
+                sys_base, sys_suffix = normalize_code(system_code)
+                sys_full = sys_base + sys_suffix
+
                 progress = (idx + 1) / total_items
                 progress_bar.progress(progress)
                 status_text.text(f"Processing {idx + 1}/{total_items}")
 
-                for _, supplier_row in supplier_df.iterrows():
-                    supplier_code = str(supplier_row[supplier_item_col])
-                    score = get_best_match_score(system_code, supplier_code)
-                    if score > best_score:
-                        best_score = score
-                        best_match = supplier_code
-                        best_price = supplier_row[supplier_price_col]
+                # Quick exact match check on normalized full key
+                best_match = None
+                best_score = 0
+                best_price = None
+                top_matches_list = []
 
+                # Use rapidfuzz to get top candidates quickly
+                matches = process.extract(sys_full, supplier_full_keys, scorer=fuzz.ratio, limit=top_n)
+                # matches are tuples (matched_key, score, index)
+                for matched_key, score, match_idx in matches:
+                    supplier_info = supplier_rows[match_idx]
+                    # Convert to a stable score using existing business logic
+                    calc_score = get_best_match_score(system_code, supplier_info['orig_code'])
+                    top_matches_list.append({
+                        'Supplier Code': supplier_info['orig_code'],
+                        'Score': round(calc_score, 1),
+                        'Price': supplier_info['price']
+                    })
+                    if calc_score > best_score:
+                        best_score = calc_score
+                        best_match = supplier_info['orig_code']
+                        best_price = supplier_info['price']
+
+                # Apply threshold filter (store even below threshold but mark low)
                 results.append({
                     'System Code': system_code,
                     'Supplier Code': best_match,
-                    'Match Score': best_score,
-                    'Cost Price': best_price
+                    'Match Score': round(best_score, 1),
+                    'Cost Price': best_price,
+                    'Top Matches': "; ".join([f"{m['Supplier Code']} ({m['Score']}%)" for m in top_matches_list])
                 })
 
             progress_bar.empty()
@@ -163,36 +202,52 @@ if supplier_file and system_file:
 
             results_df = pd.DataFrame(results)
             results_df = results_df.sort_values('Match Score', ascending=False)
-            results_df['Match Score'] = results_df['Match Score'].astype(float).round(1).astype(str) + '%'
-            results_df['Cost Price'] = '$' + results_df['Cost Price'].astype(float).round(2).astype(str)
+
+            # Safe numeric/currency handling for Cost Price
+            results_df['Cost Price Numeric'] = pd.to_numeric(results_df['Cost Price'], errors='coerce')
+            results_df['Cost Price Display'] = results_df['Cost Price Numeric'].apply(lambda x: f"${x:,.2f}" if pd.notnull(x) else "")
+
+            # Keep numeric Match Score column for filtering/metrics; create display version
+            results_df['Match Score Display'] = results_df['Match Score'].apply(lambda x: f"{x:.1f}%")
 
             st.markdown("""<div class="section"><h2>📊 Results</h2></div>""", unsafe_allow_html=True)
             
-            # Match quality metrics
-            high_matches = len(results_df[results_df['Match Score'].str.rstrip('%').astype(float) >= 90])
-            medium_matches = len(results_df[results_df['Match Score'].str.rstrip('%').astype(float).between(70, 89)])
-            low_matches = len(results_df[results_df['Match Score'].str.rstrip('%').astype(float) < 70])
+            # Match quality metrics (use numeric scores)
+            high_matches = len(results_df[results_df['Match Score'] >= 90])
+            medium_matches = len(results_df[results_df['Match Score'].between(70, 89)])
+            low_matches = len(results_df[results_df['Match Score'] < 70])
 
             col1, col2, col3 = st.columns(3)
             col1.metric("High Matches (90%+)", high_matches)
             col2.metric("Medium Matches (70-89%)", medium_matches)
             col3.metric("Low Matches (<70%)", low_matches)
 
-            st.dataframe(results_df, height=400, use_container_width=True)
+            # Apply threshold filter for display
+            filtered_df = results_df[results_df['Match Score'] >= threshold].copy()
+
+            # Display columns and nicer labels
+            display_df = filtered_df[['System Code', 'Supplier Code', 'Match Score Display', 'Cost Price Display', 'Top Matches']].rename(columns={
+                'Match Score Display': 'Match Score',
+                'Cost Price Display': 'Cost Price'
+            })
+
+            st.dataframe(display_df, height=400, use_container_width=True)
             
             # Clean the results DataFrame for any remaining encoding issues
-            for col in results_df.columns:
-                if results_df[col].dtype == 'object':
-                    results_df[col] = results_df[col].apply(lambda x: str(x).encode('ascii', 'ignore').decode('ascii') if pd.notnull(x) else x)
+            for col in display_df.columns:
+                if display_df[col].dtype == 'object':
+                    display_df[col] = display_df[col].apply(lambda x: str(x).encode('ascii', 'ignore').decode('ascii') if pd.notnull(x) else x)
             
-            # Export to CSV with UTF-8 encoding
+            # Export to CSV with UTF-8 encoding (use numeric score and numeric price too)
+            export_df = filtered_df.copy()
+            export_df = export_df.rename(columns={'Match Score': 'Match Score (%)', 'Cost Price Numeric': 'Cost Price'})
             csv_buffer = io.StringIO()
-            results_df.to_csv(csv_buffer, index=False, encoding='utf-8')
+            export_df.to_csv(csv_buffer, index=False, encoding='utf-8')
             csv_str = csv_buffer.getvalue()
             
             st.download_button("📥 Download CSV", csv_str, "matching_results.csv", "text/csv")
-
     except Exception as e:
-        st.error(f"Error: {str(e)}")
+        st.error(f"Error processing files: {e}")
+        st.exception(e)
 else:
     st.info("Please upload both files to begin matching")
